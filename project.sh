@@ -43,6 +43,23 @@ do
                 echo "Sorry this is an invalid database name,please follow the naming convension "
             fi    
         ;; 
+        4) #Remove DB
+            read -p "Enter Name of DB to remove : " name 
+            # check of Name DB Can't Start Number , no contain Special Character 
+            if  [[ $name =~ $convension ]];then 
+                name=`echo $name | tr ' ' '_'` #Replace Space _ 
+                if [[ -d ./.db/$name ]];then 
+                    echo "will delete $name ..."
+                    sleep 2
+                    rm -r ./.db/$name
+                    echo "Removing is Done"
+                else 
+                    echo "Sorry This name of DB doesn't Exist"
+                fi 
+            else 
+                echo "Sorry this is an invalid database name,please follow the naming convension "
+            fi     
+        ;; 
         *)
             echo "Invalid input Menu number 1 - 5 "
         ;;
