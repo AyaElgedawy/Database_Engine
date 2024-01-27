@@ -60,6 +60,10 @@ do
                 echo "Sorry this is an invalid database name,please follow the naming convension "
             fi     
         ;; 
+        5) #Exit
+            echo 'Good Bye :)'
+            exit
+        ;;
         *)
             echo "Invalid input Menu number 1 - 5 "
         ;;
