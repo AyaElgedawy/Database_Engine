@@ -23,6 +23,11 @@ do
                 echo "Sorry this is an invalid database name,please follow the naming convension "
             fi
         ;;
+        2 ) #List DB
+            if [[ -d ./.db ]];then 
+              ls -F ./.db | grep / | tr '/' ' '
+            fi 
+        ;;
         *)
             echo "Invalid input Menu number 1 - 5 "
         ;;
