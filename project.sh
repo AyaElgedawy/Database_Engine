@@ -28,6 +28,21 @@ do
               ls -F ./.db | grep / | tr '/' ' '
             fi 
         ;;
+        3) #Connect DB
+            read -p "Enter Name of DB : " name 
+            name=`echo $name | tr ' ' '_'` #Replace Space _ 
+            # check of Name DB Can't Start Number , no contain Special Character 
+            if  [[ $name =~ $convension ]];then 
+                if [[ -d ./.db/$name ]];then
+                #call table file
+                source menu_table.sh $name
+                else 
+                    echo "Sorry This is name of DB  Not Exist"
+                fi 
+            else 
+                echo "Sorry this is an invalid database name,please follow the naming convension "
+            fi    
+        ;; 
         *)
             echo "Invalid input Menu number 1 - 5 "
         ;;
