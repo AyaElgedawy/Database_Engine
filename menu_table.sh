@@ -140,6 +140,15 @@ do
                     echo "Sorry this is an invalid table name,please follow the naming convension "
                 fi
         ;;
+        3 ) #"List TB"
+                        if [[ -d .db/$current_DB ]];then 
+                            echo -n "All tables in $current_DB database :"
+                            ls -p .db/$current_DB | grep -v / #list only files(-p to appent/ to all directories , grep -v / to choose files that no have / at the end)
+                        else 
+                            echo "Sorry This name of database is not Exist"
+                        fi 
+                   
+        ;;
          *)
             echo "Invalid input Menu number 1 - 5 "
          ;;
