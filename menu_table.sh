@@ -3,8 +3,8 @@ current_DB=$1
 # cd ./.db/$current_DB
 PS3=" $current_DB >> "
 convension='^[a-zA-Z_]+[0-9]*([a-zA-Z0-9][[:space:]]?)*$' 
-
-select var in "Create TB" "Insert TB" "List TB" "SELECT TB" "Delete From TB" "Remove TB" "Exit"
+tmp=.db/$current_DB/tmp
+select var in "Create TB" "Insert TB" "List TB" "SELECT TB" "Delete From TB" "Remove TB" "Update" "Exit"
 
 do
   case $REPLY in
@@ -209,7 +209,7 @@ do
                     ;;
                     2 )
                         read -p "Enter the value of PK you want delete : " value
-                        tmp=.db/$current_DB/tmp
+                        
                         awk -v file="$file" -v meta="$meta" -v value=$value -v tmp="$tmp" '
                         BEGIN{
                             FS=":"
@@ -260,9 +260,45 @@ do
                 fi 
         ;;
 
+7) #Update Table
+            read -p "Enter Name of Table : " name
+            # check of Name table Can't Start Number , no contain Special Character 
+             if  [[ $name =~ $convension ]];then 
+                name=`echo $name | tr ' ' '_'` #Replace Space _ 
+                if [[ -f .db/$current_DB/$name ]];then 
+                    read -p "Enter the column : " column
+                    read -p "Enter the value you want to Update : " oldValue
+                    read -p "Enter the new value : " newValue
+
+                    awk -v column="$column" -v oldValue="$oldValue" -v newValue="$newValue" -v tmp="$tmp" ' BEGIN{
+                            FS=":";
+                            OFS=":";
+                        }
+                        {
+                        for(i=1; i<=NF; i++){
+                            if(column ==i && $i == oldValue ){
+                                $i=newValue;
+                            }
+                        }
+                            print $column	
+                            print $0 > tmp
+                        }' ".db/$current_DB/$name"
+                    mv "$tmp" ".db/$current_DB/$name"
+                 else 
+                    echo "Sorry This name of Table is not Exist"
+                 
+                fi 
+            else 
+                echo "Sorry this is an invalid table name,please follow the naming convension "
+            fi
+
+
+;;
 
          *)
-            echo "Invalid input Menu number 1 - 7 "
+            echo "Invalid input Menu number 1 - 8 "
          ;;
+
     esac
+
 done 
