@@ -77,9 +77,9 @@ do
                     if [[ -f .db/$current_DB/$name ]];then 
                         file=.db/$current_DB/$name
                         meta=.db/$current_DB/metaData_$name
-                        awk -v file="$file" -v meta="$meta" '
+                        awk -v file="$file" -v meta="$meta"   '
                             function get_value(){
-                                        printf "Enter the value in column " $i " "
+                                        printf "Enter the value in column " $i 
                                         getline value < "-"
                                         if ( $i ~ /string/ && value !=  "" ){ #? Check string constraint
                                             
@@ -121,13 +121,13 @@ do
                                         else{
                                             printf value":" >> file
                                         }
+                                        array[i]=value
                                     }              
                                 }
                             }
                         END {
                             
-                            print " number of rows: "NR/2 >> meta   #? set number of rows in meta data & we divide by to beacause of new lines 
-                            print "" >> file #? To add a new line in each row
+                            print " number of rows: "NR >> meta   #? set number of rows in meta data  
                         }
                             
                         ' ".db/$current_DB/$name"
@@ -149,8 +149,42 @@ do
                         fi 
                    
         ;;
+        4 ) #"select table"
+
+                 read -p "Enter Table Name to select its data : " name
+                 if  [[ $name =~ $convension ]];then 
+                    name=`echo $name | tr ' ' '_'` #Replace Space _ 
+                    if [[ -f .db/$current_DB/$name ]];then
+                        PS3="$current_DB>>$name>>"
+                        select var in "All" "By columns" "Exit"
+                        do
+                        case $REPLY in
+                            1)
+                                cat .db/$current_DB/$name  
+                            break
+                            ;;
+                            2)
+                                read -p "Enter columns you want to select seperated by commas: " columns
+                                read -a array <<< "$columns"
+                                cut -f "$array" -d $':' ".db/$current_DB/$name"
+
+                                break
+                            ;;
+                        esac
+                        done
+                        PS3="$current_DB>>" 
+                    else 
+                        echo "Sorry This name of Table is not Exist"
+                    fi 
+                 else 
+                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                fi 
+
+                
+        ;;
+
          *)
-            echo "Invalid input Menu number 1 - 5 "
+            echo "Invalid input Menu number 1 - 7 "
          ;;
     esac
 done 
