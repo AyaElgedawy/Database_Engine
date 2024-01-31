@@ -245,6 +245,20 @@ do
                     echo "Sorry this is an invalid table name,please follow the naming convension "
                 fi 
         ;;
+6) # Remove table
+            read -p "Enter Table Name to remove its data : " name
+                 if  [[ $name =~ $convension ]];then 
+                    name=`echo $name | tr ' ' '_'` #Replace Space _ 
+                    if [[ -f .db/$current_DB/$name ]];then
+                        rm .db/$current_DB/$name
+                        echo "$name table is removed successfuly"
+                    else 
+                        echo "Sorry This name of Table is already not Exist"
+                    fi 
+                 else 
+                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                fi 
+        ;;
 
 
          *)
