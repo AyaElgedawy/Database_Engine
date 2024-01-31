@@ -295,6 +295,11 @@ do
 
 ;;
 
+8) #Exit
+            echo "GoodBy :)"
+            break
+        ;;
+
          *)
             echo "Invalid input Menu number 1 - 8 "
          ;;
