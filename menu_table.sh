@@ -182,6 +182,70 @@ do
 
                 
         ;;
+        5 ) # "Delete from table"
+
+            read -p "Enter Table Name to delete its data : " name
+                 if  [[ $name =~ $convension ]];then 
+                    name=`echo $name | tr ' ' '_'` #Replace Space _ 
+                    if [[ -f .db/$current_DB/$name ]];then
+                    file=.db/$current_DB/$name
+                    meta=.db/$current_DB/metaData_$name
+                    PS3="$current_DB>>$name>>"
+                    select type in "All" "By PK"
+                    do
+                    case $REPLY in
+                    1)
+                        awk -v file="$file" -v meta="$meta" '
+                        
+                     #body 
+                       {
+                        if(NR==1){
+                            print $0 >file
+                        }
+                        print "number of rows: 0" >> meta
+                        }
+                        ' ".db/$current_DB/$name"
+                        break
+                    ;;
+                    2 )
+                        read -p "Enter the value of PK you want delete : " value
+                        tmp=.db/$current_DB/tmp
+                        awk -v file="$file" -v meta="$meta" -v value=$value -v tmp="$tmp" '
+                        BEGIN{
+                            FS=":"
+                            OFS=":";
+                        }
+                     #body 
+                       {
+                        while ((getline < file) > 0) {
+                            #? Check if the value exists in the first column
+                            if ($1 != value) {
+                            #? Write the record to the temporary output file
+                            print $0 > (tmp)
+                            }
+                        }
+                        
+                        }
+                        ' ".db/$current_DB/$name"
+                         # Rename the temporary output file to replace the original input file
+                        mv $tmp $file
+                        echo "Your delete run successfuly" 
+                        break
+                    ;;
+                    *)
+                        echo "Enter a valid option"
+                    ;;
+                    esac
+                    done
+                      PS3="$current_DB>>"  
+                    else 
+                        echo "Sorry This name of Table is already not Exist"
+                    fi 
+                 else 
+                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                fi 
+        ;;
+
 
          *)
             echo "Invalid input Menu number 1 - 7 "
