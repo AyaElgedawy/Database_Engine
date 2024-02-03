@@ -4,6 +4,11 @@ current_DB=$1
 PS3=" $current_DB >> "
 convension='^[a-zA-Z_]+[0-9]*([a-zA-Z0-9][[:space:]]?)*$' 
 tmp=.db/$current_DB/tmp
+GREEN="\033[0;32m"
+RED="\033[0;31m"   
+YELLOW="\033[1;32m"   
+BULE="\033[0;34m"  
+reset = "\033[0m"; 
 select var in "Create TB" "Insert TB" "List TB" "SELECT TB" "Delete From TB" "Remove TB" "Update" "Exit"
 
 do
@@ -14,10 +19,10 @@ do
              if  [[ $name =~ $convension ]];then 
                 name=`echo $name | tr ' ' '_'` #Replace Space _ 
                 if [[ -f .db/$current_DB/$name ]];then 
-                    echo "Sorry This name of Table is Already Exist"
+                    echo -e "${RED} Sorry This name of Table is Already Exist ${GREEN} "
                  else 
                     touch .db/$current_DB/$name
-                    read -p "How many columns? : " columns
+                    read -p " How many columns? : " columns
                     echo "Table Name: "$name>>.db/$current_DB/metaData_$name
                     echo "Number of Columns: " $columns>>.db/$current_DB/metaData_$name
                     if [[ $columns =~ [0-9] ]];then
@@ -50,12 +55,12 @@ do
                                         break 
                                         ;;
                                         *)
-                                        echo "Select a number from choices"
+                                        echo -e "${RED} Select a number from choices ${GREEN}"
                                         ;;
                                     esac
                                     done  
                             else
-                                    echo "Sorry this is an column database name,please follow the naming convension "
+                                    echo -e "${RED} Sorry this is an column database name,please follow the naming convension ${GREEN} "
                             fi
                         done 
                         truncate -s -1 .db/$current_DB/$name   #? To remove the last ":"
@@ -63,89 +68,100 @@ do
                         cat "column name and data type: ".db/$current_DB/$name>>.db/$current_DB/metaData_$name
                         PS3=" $current_DB >>"
                     else
-                       echo "Enter a valid number"
+                       echo -e "${RED} Enter a valid number ${GREEN} "
                     fi
                 fi 
             else 
-                echo "Sorry this is an invalid table name,please follow the naming convension "
+                echo -e "${RED} Sorry this is an invalid table name,please follow the naming convension ${GREEN}"
             fi
         ;;
         2 ) #"Insert into table"
-                read -p "Enter Table Name to insert data into : " name
+                read -p ' Enter Table Name to insert data into : ' name
                 if  [[ $name =~ $convension ]];then 
                     name=`echo $name | tr ' ' '_'` #Replace Space _ 
                     if [[ -f .db/$current_DB/$name ]];then 
                         file=.db/$current_DB/$name
                         meta=.db/$current_DB/metaData_$name
-                        awk -v file="$file" -v meta="$meta"   '
+                        awk -v file="$file" -v meta="$meta" -v  tmp="$tmp" -v red="$RED" -v reset="$reset" -v green="$GREEN" '
+                            
                             function get_value(){
-                                        printf "Enter the value in column " $i 
+                                        printf green "Enter the value in column " $i 
                                         getline value < "-"
+
+                                        if( i == 1 && value == "" ){ #?user must enter the first column(PK)
+                                            print red " You must enter a value to the primary key" green
+                                            
+                                            get_value()
+                                        }
+                                         
+                                       
                                         if ( $i ~ /string/ && value !=  "" ){ #? Check string constraint
                                             
                                                 if ( value !~ /^[a-zA-Z_0-9]*$/ ){
-                                                    print "Please follow the naming convension , not incluse spaces , special characters or begin with numbers"
+                                                    print red "Please follow the naming convension , not incluse spaces , special characters or begin with numbers" green
                                                     get_value()
                                                 }
                                                 
                                         }
                                         if ( $i ~ /int/ && value != "" ){
                                             
-                                                if ( value !~ /^[0-9]+$/ ){ #? Check int constraint
-                                                    print "Please enter a number value only"
+                                                if ( value !~ /^[0-9]*$/ ){ #? Check int constraint
+                                                    print red "Please enter a number value only" green
                                                     get_value()
                                                 }
                                                
                                         }
-                                        if( i == 1 && value == "" ){ #?user must enter the first column(PK)
-                                            print "You must enter a value to the primary key"
-                                            get_value()
-                                        }
-                                      }
-                        BEGIN{
-                            FS=":"
-                            OFS=":"
-                        }
-                            {
-                                if(NR==1){
-                                    for (i=1; i<=NF; i++){
-                                      
-                                        get_value()
                                         
-                                        if( i!=0 && value == "" ){
+                                        
+                            }
+                         BEGIN{
+                            FS=":"
+                         }
+                            {
+                            for (i=1 ; i<=NF ;  i++){
+                                if(NR==1){
+                                    
+                                   
+                                        get_value()
+                                      
+                                         
+                                        if( i != 1 && value == "" ){ #? columns allow null vaiues exept the primary key
                                             value="NULL"
                                         }
                                         if(i==NF){
-                                            print substr(value, 1, length(value)-1) >> file #? To remove the : from tyhe last column
+                                            print value >> file
+                                            
                                         }
                                         else{
-                                            printf value":" >> file
+                                            printf value":" >> file #?Print (:) after each column
                                         }
                                         array[i]=value
-                                    }              
+
+                                    
+                                                
                                 }
+                               
                             }
-                        END {
+                            }
+                            END {
+                                
+                                print " number of rows: "NR >> meta   #? set number of rows in meta data  
+                            }' .db/$current_DB/$name #| awk '!seen[$1]++'
                             
-                            print " number of rows: "NR >> meta   #? set number of rows in meta data  
-                        }
-                            
-                        ' ".db/$current_DB/$name"
-                            echo "Your Data saved Successfuly"
 
                          else 
-                        echo "Sorry This name of Table is not Exist"
+                        echo -e "${RED} Sorry This name of Table is not Exist ${GREEN} "
                     fi 
                 else 
-                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                    echo -e "${RED} Sorry this is an invalid table name,please follow the naming convension ${GREEN} "
                 fi
         ;;
         3 ) #"List TB"
                         if [[ -d .db/$current_DB ]];then 
-                            echo -n "All tables in $current_DB database :"
+                            echo -n -e "${GREEN} All tables in $current_DB database :"
                             ls -p .db/$current_DB | grep -v / #list only files(-p to appent/ to all directories , grep -v / to choose files that no have / at the end)
                         else 
-                            echo "Sorry This name of database is not Exist"
+                            echo -e "${RED} Sorry This name of database is not Exist ${GREEN} "
                         fi 
                    
         ;;
@@ -174,10 +190,10 @@ do
                         done
                         PS3="$current_DB>>" 
                     else 
-                        echo "Sorry This name of Table is not Exist"
+                        echo -e "${RED} Sorry This name of Table is not Exist ${GREEN} "
                     fi 
                  else 
-                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                    echo -e "${RED} Sorry this is an invalid table name,please follow the naming convension ${GREEN} "
                 fi 
 
                 
@@ -217,7 +233,7 @@ do
                         }
                      #body 
                        {
-                        while ((getline < file) > 0) {
+                        while ((getline < file) > 0) { #? to read the input file
                             #? Check if the value exists in the first column
                             if ($1 != value) {
                             #? Write the record to the temporary output file
@@ -226,23 +242,27 @@ do
                         }
                         
                         }
+                        END{
+                                print " number of rows: "NR >> meta   #? set number of rows in meta data  
+
+                        }
                         ' ".db/$current_DB/$name"
                          # Rename the temporary output file to replace the original input file
                         mv $tmp $file
-                        echo "Your delete run successfuly" 
+                        echo -e "${GREEN} Your delete run successfuly" 
                         break
                     ;;
                     *)
-                        echo "Enter a valid option"
+                        echo -e "${RED} Enter a valid option ${GREEN} "
                     ;;
                     esac
                     done
                       PS3="$current_DB>>"  
                     else 
-                        echo "Sorry This name of Table is already not Exist"
+                        echo -e "${RED} Sorry This name of Table is already not Exist ${GREEN}"
                     fi 
                  else 
-                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                    echo -e "${RED} Sorry this is an invalid table name,please follow the naming convension ${GREEN} "
                 fi 
         ;;
 6) # Remove table
@@ -251,12 +271,12 @@ do
                     name=`echo $name | tr ' ' '_'` #Replace Space _ 
                     if [[ -f .db/$current_DB/$name ]];then
                         rm .db/$current_DB/$name
-                        echo "$name table is removed successfuly"
+                        echo -e "${GREEN} $name table is removed successfuly"
                     else 
-                        echo "Sorry This name of Table is already not Exist"
+                        echo -e "${RED} Sorry This name of Table is already not Exist ${GREEN} "
                     fi 
                  else 
-                    echo "Sorry this is an invalid table name,please follow the naming convension "
+                    echo -e "${RED} Sorry this is an invalid table name,please follow the naming convension ${GREEN} "
                 fi 
         ;;
 
@@ -285,23 +305,23 @@ do
                         }' ".db/$current_DB/$name"
                     mv "$tmp" ".db/$current_DB/$name"
                  else 
-                    echo "Sorry This name of Table is not Exist"
+                    echo -e "${RED} Sorry This name of Table is not Exist ${GREEN} "
                  
                 fi 
             else 
-                echo "Sorry this is an invalid table name,please follow the naming convension "
+                echo -e "${RED} Sorry this is an invalid table name,please follow the naming convension ${GREEN} "
             fi
 
 
 ;;
 
 8) #Exit
-            echo "GoodBy :)"
+            echo -e "${GREEN} GoodBy :)"
             break
         ;;
 
          *)
-            echo "Invalid input Menu number 1 - 8 "
+            echo -e "${RED} Invalid input Menu number 1 - 8 ${GREEN} "
          ;;
 
     esac
